@@ -37,3 +37,18 @@ class VotePoll(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetResult(APIView):
+    def post(self, request):
+        poll_id = request.data.get('poll_id')
+
+        if poll_id:
+            poll_choices = PollChoice.objects.filter(poll=poll_id)
+            if poll_choices:
+                poll_result = {choice.name: choice.vote_count for choice in poll_choices}
+                return Response(poll_result, status.HTTP_200_OK)
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
