@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -22,7 +21,9 @@ class CreatePoll(APIView):
             poll_serializer.save()
 
             for poll_choice in poll_choices:
-                choice_serializer = PollChoiceSerializer(data={'name': poll_choice, 'poll': poll_serializer['id'].value})
+                choice_serializer = PollChoiceSerializer(
+                    data={'name': poll_choice, 'poll': poll_serializer['id'].value}
+                )
 
                 if choice_serializer.is_valid():
                     choice_serializer.save()
