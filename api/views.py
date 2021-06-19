@@ -10,16 +10,26 @@ from .serializers import PollSerializer, PollChoiceSerializer
 
 class CreatePoll(APIView):
     def post(self, request):
-        poll_data = request.data.get('Poll')
-        serializer = PollSerializer(data=poll_data)
-        if serializer.is_valid():
-            serializer.save()
-            for poll_choice in request.data.get('choices'):
-                choice = PollChoiceSerializer(data={'name': poll_choice, 'poll': serializer['id'].value})
-                if choice.is_valid():
-                    choice.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        poll_data = request.data.get('poll')
+        poll_choices = request.data.get('choices')
+
+        if not poll_choices:
+            return Response(data='Bad request: no poll choices provided', status=status.HTTP_400_BAD_REQUEST)
+
+        poll_serializer = PollSerializer(data=poll_data)
+
+        if poll_serializer.is_valid():
+            poll_serializer.save()
+
+            for poll_choice in poll_choices:
+                choice_serializer = PollChoiceSerializer(data={'name': poll_choice, 'poll': poll_serializer['id'].value})
+
+                if choice_serializer.is_valid():
+                    choice_serializer.save()
+
+            return Response(data=poll_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(data=poll_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VotePoll(APIView):
@@ -32,11 +42,14 @@ class VotePoll(APIView):
 
             if poll_choice.exists():
                 poll_choice.update(vote_count=F('vote_count') + 1)
-                return Response(status.HTTP_200_OK)
+                return Response(data='Vote taken', status=status.HTTP_200_OK)
 
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(data='Poll with given choice not found', status=status.HTTP_404_NOT_FOUND)
 
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            data='Bad request: poll_id and choice_id should be provided',
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class GetResult(APIView):
@@ -45,10 +58,11 @@ class GetResult(APIView):
 
         if poll_id:
             poll_choices = PollChoice.objects.filter(poll=poll_id)
+
             if poll_choices:
                 poll_result = {choice.name: choice.vote_count for choice in poll_choices}
-                return Response(poll_result, status.HTTP_200_OK)
+                return Response(data=poll_result, status=status.HTTP_200_OK)
 
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(data='Poll not found', status=status.HTTP_404_NOT_FOUND)
 
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(data='Bad request: poll_id should be provided', status=status.HTTP_400_BAD_REQUEST)
