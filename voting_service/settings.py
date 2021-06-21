@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import os
 
 from pathlib import Path
 
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-f%u^m!(z^s+#-h&gsuhe5l66qx^@71m*o#x47%%ajplzoar)#g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -79,15 +80,14 @@ WSGI_APPLICATION = 'voting_service.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'voting_service',
-        'USER': 'postgres',
-        'PASSWORD': '12',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': os.environ.get('PG_ENGINE', 'django.db.backends.postgresql_psycopg2'),
+        'NAME': os.environ.get('PG_DATABASE', 'voting_service'),
+        'USER': os.environ.get('PG_USER', 'postgres'),
+        'PASSWORD': os.environ.get('PG_PASSWORD', '12'),
+        'HOST': os.environ.get('PG_HOST', 'localhost'),
+        'PORT': os.environ.get('PG_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
