@@ -19,6 +19,14 @@ class CreatePollTest(APITestCase):
         self.assertTrue(PollChoice.objects.filter(name='Test choice 1').exists())
         self.assertTrue(PollChoice.objects.filter(name='Test choice 2').exists())
 
+    def test_no_choices_provided(self):
+        data = {
+            'poll': {'name': 'Test poll'},
+            'choices': []
+        }
+        response = self.client.post('/api/createPoll/',  json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_create_poll_without_poll_data(self):
         data = {
             'choices': ['Test choice 1', 'Test choice 2']
