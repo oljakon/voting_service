@@ -8,6 +8,8 @@ services:
     env_file:
       - ./.env.dev
     environment:
+      POSTGRES_DB: voting_service
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12
   web:
     build: .
