@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+from django.http import HttpRequest
 from django.db.models import F
 
 from .models import PollChoice
@@ -8,7 +9,7 @@ from .serializers import PollSerializer, PollChoiceSerializer
 
 
 class CreatePoll(APIView):
-    def post(self, request):
+    def post(self, request: HttpRequest) -> Response:
         poll_data = request.data.get('poll')
         poll_choices = request.data.get('choices')
 
@@ -20,6 +21,7 @@ class CreatePoll(APIView):
         if poll_serializer.is_valid():
             poll_serializer.save()
 
+            choice_serializers = []
             for poll_choice in poll_choices:
                 choice_serializer = PollChoiceSerializer(
                     data={'name': poll_choice, 'poll': poll_serializer['id'].value}
@@ -27,14 +29,15 @@ class CreatePoll(APIView):
 
                 if choice_serializer.is_valid():
                     choice_serializer.save()
+                    choice_serializers.append(choice_serializer.data)
 
-            return Response(data=poll_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(data=[poll_serializer.data, choice_serializers], status=status.HTTP_201_CREATED)
 
         return Response(data=poll_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VotePoll(APIView):
-    def post(self, request):
+    def post(self, request: HttpRequest) -> Response:
         poll_id = request.data.get('poll_id')
         choice_id = request.data.get('choice_id')
 
@@ -54,7 +57,7 @@ class VotePoll(APIView):
 
 
 class GetResult(APIView):
-    def post(self, request):
+    def post(self, request: HttpRequest) -> Response:
         poll_id = request.data.get('poll_id')
 
         if poll_id:
